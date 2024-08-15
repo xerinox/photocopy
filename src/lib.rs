@@ -64,18 +64,14 @@ pub fn get_drives() -> Result<HashSet<char>, GetLogicalDrivesError> {
 }
 
 pub struct MyApp {
-    show_confirmation_dialog: bool,
-    allowed_to_close: bool,
     drives: Result<HashSet<char>, GetLogicalDrivesError>,
     drive_letters: Vec<String>,
-    selected_drive: Option<String>,
+    selected_drive: Option<usize>,
 }
 
 impl MyApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         MyApp {
-            show_confirmation_dialog: false,
-            allowed_to_close: false,
             drives: get_drives(),
             drive_letters: MyApp::convert_drives_to_drive_letters(get_drives()),
             selected_drive: None,
@@ -94,22 +90,27 @@ impl MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Ok(drives) = &self.drives {
-            dbg!(drives);
+        if self.drives.is_ok() {
+            if let Some(selected_drive) = self.selected_drive {
+                dbg!(&self.drive_letters[selected_drive]);
+            }
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Try to close the window");
-            let mut selected = "None selected";
+            let mut selected = match self.selected_drive {
+                Some(selected_drive_index) => String::from(&self.drive_letters[selected_drive_index]),
+                None => String::from("None selected")
+            };
             let drive_letters = self.drive_letters.clone();
 
             if let Ok(_drives) = &self.drives {
                 egui::ComboBox::from_label("Select phone drive letter")
                     .selected_text(format!("{:?}", selected))
                     .show_ui(ui, |ui| {
-                        for drive in drive_letters.iter() {
-                            let val = ui.selectable_value(&mut selected, drive, drive);
+                        for (index, drive) in drive_letters.iter().enumerate() {
+                            let val = ui.selectable_value(&mut selected, String::from(&self.drive_letters[index]), drive);
                             if val.clicked() {
-                                self.selected_drive = Some(drive.to_string());
+                                self.selected_drive = Some(index);
                             }
                             
                         }
@@ -117,33 +118,5 @@ impl eframe::App for MyApp {
             }
         });
 
-        if ctx.input(|i| i.viewport().close_requested()) {
-            if self.allowed_to_close {
-                //do nothing - we will close
-            } else {
-                ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-                self.show_confirmation_dialog = true;
-            }
-        }
-
-        if self.show_confirmation_dialog {
-            egui::Window::new("Do you want to quit?")
-                .collapsible(false)
-                .resizable(false)
-                .show(ctx, |ui| {
-                    ui.horizontal(|ui| {
-                        if ui.button("No").clicked() {
-                            self.show_confirmation_dialog = false;
-                            self.allowed_to_close = false;
-                        }
-
-                        if ui.button("Yes").clicked() {
-                            self.show_confirmation_dialog = false;
-                            self.allowed_to_close = true;
-                            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
-                    })
-                });
-        };
     }
 }
