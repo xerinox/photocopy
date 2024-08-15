@@ -68,6 +68,7 @@ pub struct MyApp {
     allowed_to_close: bool,
     drives: Result<HashSet<char>, GetLogicalDrivesError>,
     drive_letters: Vec<String>,
+    selected_drive: Option<String>,
 }
 
 impl MyApp {
@@ -76,7 +77,8 @@ impl MyApp {
             show_confirmation_dialog: false,
             allowed_to_close: false,
             drives: get_drives(),
-            drive_letters: MyApp::convert_drives_to_drive_letters(get_drives())
+            drive_letters: MyApp::convert_drives_to_drive_letters(get_drives()),
+            selected_drive: None,
         }
     }
     fn convert_drives_to_drive_letters(res: Result<HashSet<char>, GetLogicalDrivesError>) -> Vec<String> {
@@ -105,7 +107,11 @@ impl eframe::App for MyApp {
                     .selected_text(format!("{:?}", selected))
                     .show_ui(ui, |ui| {
                         for drive in drive_letters.iter() {
-                            ui.selectable_value(&mut selected, drive, drive);
+                            let val = ui.selectable_value(&mut selected, drive, drive);
+                            if val.clicked() {
+                                self.selected_drive = Some(drive.to_string());
+                            }
+                            
                         }
                     });
             }
