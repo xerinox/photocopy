@@ -71,7 +71,7 @@ pub struct MyApp {
 }
 
 impl MyApp {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         MyApp {
             show_confirmation_dialog: false,
             allowed_to_close: false,
@@ -83,7 +83,7 @@ impl MyApp {
         let mut output:Vec<String> = vec!();
         if let Ok(drives) = res {
             drives.iter().map(|l| {
-               String::from(format!("{l}:/")) 
+               format!("{l}:/")
             }).for_each(|s|{output.push(s)});
         }
         output
