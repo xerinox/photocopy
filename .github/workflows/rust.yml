@@ -37,6 +37,5 @@ jobs:
               archive: zip
       steps:
       - uses: actions/checkout@v4
-        with:
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
